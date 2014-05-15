@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<ItemGroup>
+		<Filter Include="RenderDebug"><!--  -->
+		</Filter>
+	</ItemGroup>
+	<ItemGroup>
+		<ClInclude Include="..\..\public\RenderDebug\RenderDebug.h">
+			<Filter>RenderDebug</Filter>
+		</ClInclude>
+		<ClInclude Include="..\..\public\RenderDebug\RenderDebugBinding.h">
+			<Filter>RenderDebug</Filter>
+		</ClInclude>
+		<ClCompile Include="..\..\public\RenderDebug\RenderDebugBinding.cpp">
+			<Filter>RenderDebug</Filter>
+		</ClCompile>
+	</ItemGroup>
+	<ItemGroup>
+		<Filter Include="src"><!--  -->
+		</Filter>
+	</ItemGroup>
+	<ItemGroup>
+		<Filter Include="src\ObjView"><!--  -->
+		</Filter>
+	</ItemGroup>
+	<ItemGroup>
+		<ClCompile Include="..\..\app\ObjView\ObjView.cpp">
+			<Filter>src\ObjView</Filter>
+		</ClCompile>
+		<ClCompile Include="..\..\app\ObjView\wavefront.cpp">
+			<Filter>src\ObjView</Filter>
+		</ClCompile>
+		<ClInclude Include="..\..\app\ObjView\wavefront.h">
+			<Filter>src\ObjView</Filter>
+		</ClInclude>
+	</ItemGroup>
+	<ItemGroup>
+	</ItemGroup>
+</Project>
