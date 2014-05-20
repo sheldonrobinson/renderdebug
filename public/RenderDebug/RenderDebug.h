@@ -43,7 +43,7 @@
 \brief debug rendering classes and structures
 */
 
-#define RENDER_DEBUG_VERSION 102
+#define RENDER_DEBUG_VERSION 103
 
 namespace RENDER_DEBUG
 {
@@ -113,6 +113,39 @@ struct DebugRenderState
 	};
 };
 
+class RenderDebugInstance
+{
+public:
+	RenderDebugInstance(void)
+	{
+		mTransform[0] = 0;
+		mTransform[1] = 0;
+		mTransform[2] = 0;
+
+		mTransform[3] = 1;
+		mTransform[4] = 0;
+		mTransform[5] = 0;
+
+		mTransform[6] = 0;
+		mTransform[7] = 1;
+		mTransform[8] = 0;
+
+		mTransform[9] = 0;
+		mTransform[10] = 0;
+		mTransform[11] = 1;
+
+	}
+	float	mTransform[12]; // a 3x4 matrix (tanslation + scale/rotation)
+};
+
+class RenderDebugMeshVertex
+{
+public:
+	float mPosition[3];				// The world-space position
+	float mNormal[3];			// The normal vector to use for lighting
+	float mTexel[2];			// Texture co-ordinates
+};
+
 /**
 \brief Simple vertex with normal and color
  */
@@ -156,111 +189,45 @@ public:
 
   virtual void debugCommand(const char *cmd) = 0;	// A command to execute
 
+  // The following methods are if your render interface binding supports instanced triangle meshes.
+  // You are not required to implement these methods if you do not want or need this feature.
+
+  	/**
+	\brief Render a set of instanced triangle meshes.
+	*/
+	virtual bool renderTriangleMeshInstances(uint32_t /*meshId*/,		// The ID of the previously created triangle mesh
+											 uint32_t /*instanceCount*/,	// The number of instances to render
+											 const RenderDebugInstance * /*instances*/)	// The array of poses for each instance
+	{
+		return false;
+	}
+
+	/**
+	\brief Create a triangle mesh that we can render.  Assumes an indexed triangle mesh.  User provides a *unique* id.  If it is not unique, this will fail.
+	*/
+	virtual bool createTriangleMesh(uint32_t /*meshId*/,	// The unique mesh ID
+									uint32_t /*vcount*/,	// The number of vertices in the triangle mesh
+									const RenderDebugMeshVertex * /*meshVertices*/,	// The array of vertices
+									uint32_t /*tcount*/,	// The number of triangles (indices must contain tcount*3 values) If zero, assumed to just be a triangle list
+									const uint32_t * /*indices*/) 	// The array of triangle mesh indices
+	{
+		return false;
+	}
+
+	/**
+	\brief Release a previously created triangle mesh
+	*/
+	virtual bool releaseTriangleMesh(uint32_t /*meshId*/) 
+	{
+		return false;
+	}
+
 protected:
 	virtual ~RenderDebugInterface(void)
 	{
 
 	}
 };
-
-/**
-\brief The maximum number of graphs that can be displayed at one time.  (0-5)
-*/
-static const uint32_t MAX_GRAPHS			(6);
-/**
-\brief The width of the graphs (x axis) when created automatically
-*/
-static const float GRAPH_WIDTH_DEFAULT	(+0.8f);
-/**
-\brief The height of the graphs (y axis) when created automatically
-*/
-static const float GRAPH_HEIGHT_DEFAULT	(+0.4f);
-
-/**
-\brief definition of the debugGraph descriptor used to create graphs
-*/
-struct DebugGraphDesc 
-{
-	DebugGraphDesc(void) 
-	{ 
-		mPoints = 0;
-		mGraphXLabel = 0;
-		mGraphYLabel = 0;
-	};
-
-
-	/**
-	\brief The number of float data points to graph
-	*/
-	uint32_t	mNumPoints;
-	/**
-	\brief Pointer to the float data points to graph
-	*/
-	const float*	mPoints;
-	/**
-	\brief optional cutoff line drawn horizontally on the graph.  It should be between 0 and mGraphMax.
-	0.0f indicates not to draw the cutoff line.
-	*/
-	float	mCutOffLevel;
-	/**
-	\brief The maximum value that the graph should be be able to display.
-	Noramlly this is slightly larger than the greatest value in the mPoints array to make room for
-	future samples that are higher then the current set.
-	*/
-	float	mGraphMax;
-	/**
-	\brief The bottom left x coordinate of the graph.
-	This is set automatically by the constructor that takes graphNum as an argument.
-	NOTE: display coordinates range from -1.0f - + 1.0f
-	*/
-	float	mGraphXPos;
-	/**
-	\brief bottom left y coordinate of the graph.
-	This is set automatically by the constructor that takes graphNum as an argument.
-	NOTE: display coordinates range from -1.0f - + 1.0f
-	*/
-	float	mGraphYPos;
-	/**
-	\brief The width of the graph.
-	This is set automatically by the constructor that takes graphNum as an argument.
-	NOTE: display coordinates range from -1.0f - + 1.0f
-	*/
-	float	mGraphWidth;
-	/**
-	\brief The height of the graph.
-	This is set automatically by the constructor that takes graphNum as an argument.
-	NOTE: display coordinates range from -1.0f - + 1.0f
-	*/
-	float	mGraphHeight;
-	/**
-	\brief The color of the data.
-	This is set automatically by the constructor that takes graphNum as an argument.
-	NOTE: display coordinates range from -1.0f - + 1.0f
-	This is set automatically by the constructor that takes graphNum as an argument.
-	*/
-	uint32_t	mGraphColor;
-	/**
-	\brief The alternate color of the data if mColorSwitchIndex is set to a value that is a valid
-	index to the mPoints array.  The points after mColorSwitchIndex are drawn in this color.
-	This is set automatically by the constructor that takes graphNum as an argument.
-	*/
-	uint32_t	mArrowColor;
-	/**
-	\brief A pointer to the label for the X axis.
-	*/
-	const char*	mGraphXLabel;
-	/**
-	\brief A pointer to the label for the Y axis.
-	*/
-	const char*	mGraphYLabel;
-	/**
-	\brief The (optional!) index in the data set at which to switch the color to the color specified by
-	mArrorColor.  By default this is set to -1 indicating that no color switch should be performed.
-	*/
-	uint32_t	mColorSwitchIndex;
-
-};
-
 
 /**
 \brief class that draws debug rendering primitives
@@ -275,6 +242,15 @@ public:
 		RM_LOCAL,		// Just uses the render-debug library for rendering only; disables all client/server communications; just lets an app use it as a debug renderer.
 		RM_CLIENT_OR_FILE, // Runs as a client which connects to a server (if found) or, if no server found, then writes the output to a file that the server can later load and replay
 		RM_FILE,		// Run's *only* as a file; never tries to connect to a server.
+	};
+	// used for client/server interface.
+	enum PlaybackMode
+	{
+		PM_FORWARD,
+		PM_REVERSE,
+		PM_FORWARD_ONE_FRAME,
+		PM_REVERSE_ONE_FRAME,
+		PM_PAUSE
 	};
 
 	/**
@@ -295,12 +271,12 @@ public:
 			errorCode = 0;
 			echoFileLocally = false;
 		}
-		const char *dllName;		// Name of the render-debug DLL to load.
-		uint32_t	versionNumber;	// expected version number; if not equal then the DLL won't load.
-		RunMode		runMode;		// startup mode
-		const char *recordFileName;	// If running in 'file' mode, this is the name of the file on disk the data will be rendering data will be recorded to.
-		const char *errorCode;		// If it failed to create the render-debug system; this will contain a string explaining why.
-		bool		echoFileLocally;	// Is recording to a file, do we also want to echo the debugging commands locally (for both local render *and* record file at the same time).
+		const char				*dllName;		// Name of the render-debug DLL to load.
+		uint32_t				versionNumber;	// expected version number; if not equal then the DLL won't load.
+		RunMode					runMode;		// startup mode
+		const char				*recordFileName;	// If running in 'file' mode, this is the name of the file on disk the data will be rendering data will be recorded to.
+		const char				*errorCode;		// If it failed to create the render-debug system; this will contain a string explaining why.
+		bool					echoFileLocally;	// Is recording to a file, do we also want to echo the debugging commands locally (for both local render *and* record file at the same time).
 	};
 
 	virtual uint32_t getUpdateCount(void) const = 0;
@@ -395,19 +371,19 @@ public:
 	virtual void  setRenderScale(float scale) = 0;
 
 	/**
-	\brief Set the complete current set of DebugRenderState bits explicitly. 
+	\brief Set the complete current set of RENDER_DEBUG::DebugRenderState bits explicitly. 
 	*/
 	virtual void  setCurrentState(uint32_t states=0) = 0;
 
 	/**
 	\brief Add a bit to the current render state.
 	*/
-	virtual void  addToCurrentState(DebugRenderState::Enum state) = 0; // OR this state flag into the current state.
+	virtual void  addToCurrentState(RENDER_DEBUG::DebugRenderState::Enum state) = 0; // OR this state flag into the current state.
 
 	/**
 	\brief Clear a bit from the current render state.
 	*/
-	virtual void  removeFromCurrentState(DebugRenderState::Enum state) = 0; // Remove this bit flat from the current state
+	virtual void  removeFromCurrentState(RENDER_DEBUG::DebugRenderState::Enum state) = 0; // Remove this bit flat from the current state
 
 	/**
 	\brief Set the current scale for 3d text
@@ -420,7 +396,7 @@ public:
 	virtual void  setCurrentArrowSize(float arrowSize) = 0;
 
 	/**
-	\brief Get the current DebugRenderState bit fields.
+	\brief Get the current RENDER_DEBUG::DebugRenderState bit fields.
 	*/
 	virtual uint32_t getCurrentState(void) const = 0;
 
@@ -437,7 +413,7 @@ public:
 
 
 	/**
-	\brief Get the entire current render state. Return the DebugRenderState
+	\brief Get the entire current render state. Return the RENDER_DEBUG::DebugRenderState
 	*/
 	virtual uint32_t getRenderState(uint32_t &color,			// Primary color
 									float &displayTime,			// display time
@@ -453,7 +429,7 @@ public:
 	virtual void  endDrawGroup(void) = 0;
 
 	/**
-	\brief Get the current DebugRenderState bit fields.
+	\brief Get the current RENDER_DEBUG::DebugRenderState bit fields.
 	*/
 	virtual void  setDrawGroupVisible(int32_t groupId,		// The draw group ID
 										bool state) = 0;	// Whether it should be visible or not.
@@ -770,26 +746,6 @@ public:
 	virtual const float * getPose(void) const = 0;
 
 	/**
-	\brief Create an createDebugGraphDesc.  This is the manual way of setting up a graph.  Every parameter can
-	and must be customized when using this constructor.
-	*/
-	virtual DebugGraphDesc* createDebugGraphDesc(void) = 0;
-
-	/**
-	\brief Release a previously created debug graph descriptor
-	*/
-	virtual void releaseDebugGraphDesc(DebugGraphDesc *desc) = 0;
-
-	/**
-	\brief Create an createDebugGraphDesc using the minimal amount of work.  This constructor provides for six custom
-	graphs to be simultaneously drawn on the display at one time numbered 0 to 5.  The position, color, and size
-	of the graphs are automatically set based on the graphNum argument.
-	*/
-	virtual DebugGraphDesc* createDebugGraphDesc(uint32_t graphNum,uint32_t dataCount,const float *dataArray, float maxY, char* xLabel, char* yLabel) = 0;
-
-	virtual void debugGraph(const DebugGraphDesc& graphDesc) = 0;
-
-	/**
 	\brief Set a debug color value by name.
 	*/
 	virtual void setDebugColor(DebugColors::Enum colorEnum, uint32_t value) = 0;
@@ -858,6 +814,37 @@ public:
 	\brief Unlock the global render-debug mutex
 	*/
 	virtual void unlock(void) = 0;
+
+	/**
+	\brief In server mode controls how the shared-memory buffer is accessed; provides limited replay feature
+	*/
+	virtual void setPlaybackMode(PlaybackMode pm) = 0;
+
+	/**
+	\brief Convenience method to return a unique mesh id number (simply a global counter to avoid clashing with other ids
+	*/
+	virtual uint32_t getMeshId(void) = 0;
+
+	/**
+	\brief Render a set of instanced triangle meshes.
+	*/
+	virtual bool renderTriangleMeshInstances(uint32_t meshId,		// The ID of the previously created triangle mesh
+											 uint32_t instanceCount,	// The number of instances to render
+											 const RenderDebugInstance *instances) = 0;	// The array of poses for each instance
+
+	/**
+	\brief Create a triangle mesh that we can render.  Assumes an indexed triangle mesh.  User provides a *unique* id.  If it is not unique, this will fail.
+	*/
+	virtual bool createTriangleMesh(uint32_t meshId,	// The unique mesh ID
+									uint32_t vcount,	// The number of vertices in the triangle mesh
+									const RenderDebugMeshVertex *meshVertices,	// The array of vertices
+									uint32_t tcount,	// The number of triangles (indices must contain tcount*3 values)
+									const uint32_t *indices) = 0;	// The array of triangle mesh indices
+
+	/**
+	\brief Release a previously created triangle mesh
+	*/
+	virtual bool releaseTriangleMesh(uint32_t meshId) = 0;
 
 	/**
 	\brief Release the render debug class
