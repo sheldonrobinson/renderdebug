@@ -12,18 +12,23 @@ const float FM_PI = 3.1415926535897932384626433832795028841971693993751f;
 const float FM_DEG_TO_RAD = ((2.0f * FM_PI) / 360.0f);
 const float FM_RAD_TO_DEG = (360.0f / (2.0f * FM_PI));
 
-
 void testRenderDebug(void)
 {
 	printf("Generating 500 frames of debug visualization data.\r\n");
 
 	gRenderDebug->debugMessage("Running the TestRenderDebug console application.\r\n");
 
+	uint32_t frameCount = 500;
+	if ( gRenderDebug->getRunMode() == RENDER_DEBUG::RenderDebug::RM_CLIENT )
+	{
+		frameCount = 500000;
+	}
+	
 	float t = 0;
 
-	for (uint32_t i=0; i<500; i++)
+	for (uint32_t i=0; i<frameCount; i++)
 	{
-		gRenderDebug->debugMessage("Processing frame #%d of 500.\r\n", i+1 );
+		gRenderDebug->debugMessage("Processing frame #%d of %d.\r\n", i+1, frameCount );
 #if 1
 		gRenderDebug->drawGrid();
 		gRenderDebug->pushRenderState();
@@ -72,6 +77,17 @@ void testRenderDebug(void)
 #endif
 		gRenderDebug->render(1.0f/60.0f,NULL);
 		t+=0.01f;
+
+		uint32_t argc;
+		const char **argv = gRenderDebug->getCommandFromServer(argc);
+		if ( argc )
+		{
+			const char *cmd = argv[0];
+			if ( strcmp(cmd,"client_stop") == 0)
+			{
+				break;
+			}
+		}
 	}
 }
 

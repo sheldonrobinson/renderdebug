@@ -213,7 +213,7 @@ int main(int argc,const char **argv)
 
 					gRenderDebug->createTriangleMesh(meshId,(uint32_t)mb.mVertices.size(), &mb.mVertices[0], 0, NULL );
 
-#define INSTANCE_BLOCK 10
+#define INSTANCE_BLOCK 1
 #define INSTANCE_COUNT (INSTANCE_BLOCK*INSTANCE_BLOCK)
 
 					RENDER_DEBUG::RenderDebugInstance instances[INSTANCE_COUNT];
@@ -227,11 +227,59 @@ int main(int argc,const char **argv)
 						}
 					}
 
-					gRenderDebug->renderTriangleMeshInstances(meshId,INSTANCE_COUNT,instances);
 
-					gRenderDebug->render(1.0f/60.0f,NULL);
-					gRenderDebug->releaseTriangleMesh(meshId);
-					gRenderDebug->render(1.0f/60.0f,NULL);
+					uint32_t frameCount = 2;
+					if ( gRenderDebug->getRunMode() == RENDER_DEBUG::RenderDebug::RM_CLIENT )
+					{
+						frameCount = 500000;
+					}
+					bool solid=true;
+
+					for (uint32_t i=0; i<frameCount; i++)
+					{
+						float pos[3] = { 0, 2, 0 };
+						gRenderDebug->debugText(pos,"%s", argv[1] );
+						gRenderDebug->addToCurrentState(RENDER_DEBUG::DebugRenderState::SolidWireShaded);
+						gRenderDebug->addToCurrentState(RENDER_DEBUG::DebugRenderState::CameraFacing);
+						gRenderDebug->setCurrentColor(0xFFFF00);
+
+						if ( solid )
+						{
+							gRenderDebug->renderTriangleMeshInstances(meshId,INSTANCE_COUNT,instances);
+						}
+						else
+						{
+							for (int32_t i=0; i<w.mTriCount; i++)
+							{
+								uint32_t i1 = w.mIndices[i*3+0];
+								uint32_t i2 = w.mIndices[i*3+1];
+								uint32_t i3 = w.mIndices[i*3+2];
+
+								const float *p1 = &w.mVertices[i1*3];
+								const float *p2 = &w.mVertices[i2*3];
+								const float *p3 = &w.mVertices[i3*3];
+
+								gRenderDebug->debugTri(p3,p2,p1,true);
+							}
+						}
+
+						gRenderDebug->render(1.0f/60.0f,NULL);
+
+						uint32_t argc;
+						const char **argv = gRenderDebug->getCommandFromServer(argc);
+						if ( argv )
+						{
+							const char *cmd = argv[0];
+							if ( strcmp(cmd,"client_stop") == 0 )
+							{
+								break;
+							}
+							else if (strcmp(cmd,"toggle") == 0  )
+							{
+								solid = solid ? false : true;
+							}
+						}
+					}
 
 				}
 

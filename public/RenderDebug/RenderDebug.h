@@ -43,7 +43,7 @@
 \brief debug rendering classes and structures
 */
 
-#define RENDER_DEBUG_VERSION 103
+#define RENDER_DEBUG_VERSION 104
 
 namespace RENDER_DEBUG
 {
@@ -845,6 +845,22 @@ public:
 	\brief Release a previously created triangle mesh
 	*/
 	virtual bool releaseTriangleMesh(uint32_t meshId) = 0;
+
+	/**
+	\brief Send a command from the server to the client.  This could be any arbitrary console command, it can also be mouse drag events, debug visualization events, etc.
+	* the client receives this command in argc/argv format.
+	*/
+	virtual bool sendCommandToClient(const char *fmt,...) = 0;
+
+	/**
+	\brief If running in client mode, poll this method to retrieve any pending commands from the server.  If it returns NULL then there are no more commands.
+	*/
+	virtual const char ** getCommandFromServer(uint32_t &argc) = 0;
+
+	/**
+	\brief Report what 'Run' mode we are operation gin.
+	*/
+	virtual RunMode getRunMode(void) = 0;
 
 	/**
 	\brief Release the render debug class

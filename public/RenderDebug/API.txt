@@ -1,0 +1,134 @@
+class RenderDebugInterface
+{
+debugRenderLines
+debugRenderTriangles
+debugMessage
+debugCommand
+renderTriangleMeshInstances
+createTriangleMesh
+releaseTriangleMesh
+};
+
+render(float dtime,RenderDebugInterface *iface)
+
+
+enum RunMode
+{
+RM_SERVER
+RM_CLIENT
+RM_LOCAL
+RM_CLIENT_OR_FILE
+RM_FILE
+};
+
+
+State Management
+---------------------------------
+pushRenderState
+popRenderState
+setCurrentColor
+getCurrentColor
+getCurrentArrowColor
+setCurrentDisplayTime
+getRenderScale
+setRenderScale
+setCurrentState
+addToCurrentState
+removeFromCurrentState
+setCurrentTextScale
+setCurrentArrowSize
+getCurrentState
+setRenderState
+getRenderState
+setPose
+getPose
+getDebugColor
+
+
+Debug Visualization Lines and Triangles
+-------------------------------------------
+drawGrid
+debugLine
+debugGradientLine
+debugOrientedLine
+debugRay
+debugThickRay
+debugTri
+debugTriNormals
+debugGradientTri
+debugGradientTriNormals
+debugPolygon
+debugPoint
+debugArc
+debugThickArc
+
+Debug Visualization Shapes
+------------------------------
+debugCylinder
+debugPlane
+debugBound
+debugOrientedBound
+debugOrientedCapsule
+debugOrientedCapsuleTapered
+debugOrientedCylinder
+debugOrientedCircle
+debugSphere
+debugOrientedSphere
+debugDetailedSphere
+
+Debug Visualization Matrices
+-------------------------------
+debugAxes
+debugFrustum
+
+Debug Visualization Text / Control
+----------------------------
+debugText
+debugOrientedText
+debugMessage
+debugCommand
+
+
+Draw Groups
+----------------------
+reset
+beginDrawGroup
+endDrawGroup
+setDrawGroupVisible
+setDrawGroupPose
+
+ScreenSpace Support
+--------------------------
+debugGraph
+debugQuad
+debugRect2d
+setViewMatrix
+setProjectionMatrix
+getViewProjectionMatrix
+getViewMatrix
+getProjectionMatrix
+
+Utility Methods
+------------------------------------------
+getDebugBounds
+setFrameTime
+getFrameTime
+setFilePlayback
+setPlaybackFrame
+getPlaybackFrameCount
+stopPlayback
+trylock
+lock
+unlock
+setPlaybackMode
+sendCommandToClient
+getCommandFromServer
+getRunMode
+
+Instanced Triangle Mesh Rendering
+----------------------------------------
+getMeshId
+renderTriangleMeshInstances
+createTriangleMesh
+releaseTriangleMesh
+
