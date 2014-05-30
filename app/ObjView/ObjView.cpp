@@ -259,7 +259,7 @@ int main(int argc,const char **argv)
 								const float *p2 = &w.mVertices[i2*3];
 								const float *p3 = &w.mVertices[i3*3];
 
-								gRenderDebug->debugTri(p3,p2,p1,true);
+								gRenderDebug->debugTri(p3,p2,p1);
 							}
 						}
 

@@ -43,7 +43,7 @@
 \brief debug rendering classes and structures
 */
 
-#define RENDER_DEBUG_VERSION 104
+#define RENDER_DEBUG_VERSION 105
 
 namespace RENDER_DEBUG
 {
@@ -110,6 +110,7 @@ struct DebugRenderState
 		CameraFacing	= (1<<5),  //!< True if text should be displayed camera facing
 		InfiniteLifeSpan = (1<<6),  //!< True if the lifespan is infinite (overrides current display time value)
 		CenterText		= (1<<7),  //!< True if the text should be centered.
+		DoubleSided		= (1<<8),	//! If true, then triangles should be rendered double sided, back-side uses secondary color
 	};
 };
 
@@ -446,8 +447,7 @@ public:
 	\brief Draw a polygon; 'points' is an array of 3d vectors.
 	*/
 	virtual void  debugPolygon(uint32_t pcount,	// Number of points in the polygon
-								const float *points,	// The array of Vec3 points x1,y1,z1,...x2,y2,z2...
-								bool doubleSided) = 0;	// Whether or not to render the polygon double sided.  If so, the back-facing triangles will use the secondary color
+								const float *points) = 0;	// The array of Vec3 points x1,y1,z1,...x2,y2,z2...
 
 	/**
 	\brief Draw a single line
@@ -503,8 +503,7 @@ public:
 	*/
 	virtual void  debugTri(const float p1[3],	
 							const float p2[3],
-							const float p3[3], 
-							bool doubleSided=false) = 0; // Whether or not to render the triangle double-sided.  If true the backside will use the secondary color. The lighting normal will be computed.
+							const float p3[3]) = 0; 
 
 	/**
 	\brief Debug visualize a 3d triangle with provided vertex lighting normals.
